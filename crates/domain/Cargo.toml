@@ -1,0 +1,14 @@
+[package]
+name = "domain"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "domain"
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = "1.0.100"
+chrono = "0.4.42"
+sqlx = "0.8.6"
+uuid = { version = "1.19.0", features = ["v4", "fast-rng"] }

@@ -1,0 +1,15 @@
+[package]
+name = "linux_client"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+domain = { path = "../domain" }
+client_core = { path = "../client_core" }
+anyhow = "1.0.100"
+clap = { version = "4.5.53", features = ["derive"] }
+uuid = { version = "1.19.0", features = ["v4", "fast-rng"] }
+tokio = { version = "1.48.0", features = ["full"] }
+sqlx = { version = "0.8.6", features = ["runtime-tokio", "sqlite", "macros"] }
+chrono = "0.4.42"
+prettytable = "0.10.0"
