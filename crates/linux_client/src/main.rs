@@ -7,7 +7,7 @@ use client_core::task::impls::Service;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let config = Config::from_env()?;
+    let config = Config::new()?;
 
     let sqlite = Sqlite::new(&config.database_url).await?;
     let task_service = Service::new(sqlite);

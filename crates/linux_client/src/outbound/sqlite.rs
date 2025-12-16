@@ -2,9 +2,15 @@ use anyhow::Context;
 use chrono::DateTime;
 use client_core::task::{create::SaveTaskError, ports::TaskRepository};
 use domain::task::Task;
-use sqlx::{Executor, SqlitePool, sqlite::SqliteConnectOptions};
-use std::str::FromStr;
+use sqlx::{
+    Executor, SqlitePool,
+    migrate::{Migrator},
+    sqlite::SqliteConnectOptions,
+};
+use std::path::PathBuf;
 use uuid::Uuid;
+
+static MIGRATOR: Migrator = sqlx::migrate!("./migrations");
 
 #[derive(Debug, Clone)]
 pub struct Sqlite {
@@ -12,14 +18,16 @@ pub struct Sqlite {
 }
 
 impl Sqlite {
-    pub async fn new(path: &str) -> Result<Sqlite, anyhow::Error> {
+    pub async fn new(path: &PathBuf) -> Result<Sqlite, anyhow::Error> {
         let pool = SqlitePool::connect_with(
-            SqliteConnectOptions::from_str(path)
-                .with_context(|| format!("invalid database path {}", path))?
+            SqliteConnectOptions::new()
+                .filename(path)
                 .pragma("foreign_keys", "ON"),
         )
         .await
-        .with_context(|| format!("failed to open database at {}", path))?;
+        .with_context(|| format!("failed to open database at {}", path.display()))?;
+
+        MIGRATOR.run(&pool).await?;
 
         Ok(Sqlite { pool })
     }
@@ -34,7 +42,9 @@ impl TaskRepository for Sqlite {
             .into_iter()
             .map(|row| {
                 let id = Uuid::parse_str(&row.id).expect("invalid UUID in DB");
-                let completed = row.completed.map(|ts| DateTime::from_timestamp(ts, 0).unwrap());
+                let completed = row
+                    .completed
+                    .map(|ts| DateTime::from_timestamp(ts, 0).unwrap());
                 Task::new(
                     id,
                     row.title,
@@ -55,7 +65,9 @@ impl TaskRepository for Sqlite {
             .into_iter()
             .map(|row| {
                 let id = Uuid::parse_str(&row.id).expect("invalid UUID in DB");
-                let completed = row.completed.map(|ts| DateTime::from_timestamp(ts, 0).unwrap());
+                let completed = row
+                    .completed
+                    .map(|ts| DateTime::from_timestamp(ts, 0).unwrap());
                 Task::new(
                     id,
                     row.title,
@@ -113,7 +125,7 @@ impl TaskRepository for Sqlite {
 
         Ok(task.id().clone())
     }
-    
+
     async fn update_task(&self, task: Task) -> anyhow::Result<Uuid, SaveTaskError> {
         let mut tx = self
             .pool

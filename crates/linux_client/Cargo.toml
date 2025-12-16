@@ -3,6 +3,10 @@ name = "linux_client"
 version = "0.1.0"
 edition = "2024"
 
+[[bin]]
+name = "duck-do"
+path = "src/main.rs"
+
 [dependencies]
 domain = { path = "../domain" }
 client_core = { path = "../client_core" }
